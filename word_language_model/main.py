@@ -99,11 +99,11 @@ model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid,
 if args.cuda:
     model.cuda()
 
-# criterion = nn.CrossEntropyLoss()
-
-def criterion(pred, target):
+def criterion_mos(pred, target):
     pred = torch.log(pred)
     return F.nll_loss(pred, target)
+
+criterion = criterion_mos if args.mos else nn.CrossEntropyLoss()
 
 ###############################################################################
 # Training code
