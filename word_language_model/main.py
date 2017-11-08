@@ -4,6 +4,7 @@ import time
 import math
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
 from torch.autograd import Variable
 
 import data
@@ -34,6 +35,8 @@ parser.add_argument('--dropout', type=float, default=0.2,
                     help='dropout applied to layers (0 = no dropout)')
 parser.add_argument('--tied', action='store_true',
                     help='tie the word embedding and softmax weights')
+parser.add_argument('--mos', action='store_true',
+                    help='mixture of softmaxes', default=False)
 parser.add_argument('--seed', type=int, default=1111,
                     help='random seed')
 parser.add_argument('--cuda', action='store_true',
@@ -91,11 +94,16 @@ test_data = batchify(corpus.test, eval_batch_size)
 ###############################################################################
 
 ntokens = len(corpus.dictionary)
-model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied)
+model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid,
+        args.nlayers, args.dropout, args.tied, args.mos)
 if args.cuda:
     model.cuda()
 
-criterion = nn.CrossEntropyLoss()
+# criterion = nn.CrossEntropyLoss()
+
+def criterion(pred, target):
+    pred = torch.log(pred)
+    return F.nll_loss(pred, target)
 
 ###############################################################################
 # Training code
